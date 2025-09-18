@@ -25,7 +25,7 @@ if capture.isOpened():
         # 잘라낸 이미지를 모델에 넘겨주고 모델은 추론 결과를 results로 반환한다.
         results = model(roi) # 이때 모델(yolo)은 박스 좌표, 클래스(class), 확률 정보등을 반환한다.
 
-        # 로봇에게 넘겨준 이미지 범위를 가시적으로 출력
+        # 모델에게 넘겨준 이미지 범위를 가시적으로 출력
         cv2.rectangle(frame, (100, 100), (200, 200), (0, 255, 0), 2)
 
         # 이미지에서 추론한 결과(results[0])를 전부(.plot()) annotated에 대입한다. roi이미지가 저장됨
