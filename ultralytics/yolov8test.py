@@ -10,34 +10,33 @@ capture = cv2.VideoCapture(0)
 
 
 # ROI 좌표 설정
-x1 = 200
-y1 = 200
-x2 = 600
-y2 = 400
+R_X1 = 200
+R_Y1 = 200
+R_X2 = 600
+R_Y2 = 400
 
 # 중심점 좌표 설정
-c_x = int((x1+x2)/2)
-c_y = int((y1+y2)/2)
+C_X = (R_X1+R_X2) // 2
+C_Y = (R_Y1+R_Y2) // 2
 
 # 카메라가 촬영가능 상태라면 반복문 실행
 if capture.isOpened():
     while True:
 
         ret, frame = capture.read() # read는 boolean값과 이미지(넘파이배열)를 반환한다.
-        roi = frame[y1:y2,x1:x2] # 모델에게 인식시킬 범위를 리스트 슬라이싱을 사용해 저장한다.
+        roi = frame[R_Y1:R_Y2,R_X1:R_X2] # 모델에게 인식시킬 범위를 리스트 슬라이싱을 사용해 저장한다.
         
         # 잘라낸 이미지를 모델에 넘겨주고 모델은 추론 결과를 results로 반환한다.
         results = model(roi) # 이때 모델(yolo)은 박스 좌표, 클래스(class), 확률 정보등을 반환한다.
 
         # 모델에게 넘겨준 이미지 범위를 가시적으로 출력
-        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-        cv2.circle(frame, (c_x,c_y), 3, (0, 0, 255), 3)
+        cv2.rectangle(frame, (R_X1, R_Y1), (R_X2, R_Y2), (0, 255, 0), 2)
+        cv2.circle(frame, (C_X,C_Y), 3, (0, 0, 255), 3)
         
         # 이미지에서 추론한 결과(results[0])를 전부(.plot()) annotated에 대입한다. roi이미지가 저장됨
         boxes = results[0].boxes
 
         # annotated = results[0].plot()
-
         for box in boxes:
             xyxy = box.xyxy[0].tolist()
             conf = float(box.conf[0])
@@ -45,12 +44,12 @@ if capture.isOpened():
             label = results[0].names.get(cls_id, str(cls_id))
             o_x, o_y, o_x2, o_y2 = map(int, xyxy)
             
-            X1, Y1 = o_x + x1, o_y + y1
-            X2, Y2 = o_x2 + x1, o_y2 + y1
-            
-            if X1 <= c_x <= X2 and Y1 <= c_y <= Y2:
-                cv2.rectangle(frame, (X1, Y1), (X2, Y2), (255, 0, 0), 3)
-                cv2.putText(frame, label, (10, 500), cv2.FONT_HERSHEY_SCRIPT_SIMPLEX, 4, (255, 255, 255), 3)
+            X1, Y1 = o_x + R_X1, o_y + R_Y1
+            X2, Y2 = o_x2 + R_X1, o_y2 + R_Y1
+            if conf >= 0.5:    
+                if X1 <= C_X <= X2 and Y1 <= C_Y <= Y2:
+                    cv2.rectangle(frame, (X1, Y1), (X2, Y2), (255, 0, 0), 3)
+                    cv2.putText(frame, f"{label} {conf:.2f}", (X1+10, Y1-20), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
         # 탐지한 결과(annotated)를 다시 원본 프레임에 대입해서 영상에 보이도록 출력한다.
         # frame[y1:y2,x1:x2] = annotated
